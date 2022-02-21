@@ -3,123 +3,116 @@ from pathlib import Path
 from os import path
 from shutil import rmtree
 
-HOME_DIR = str(Path.home())
-DB_PATH = f"{HOME_DIR}/.contacts"
-DB_FILENAME = "db.json"
-DB_FILE_PATH = f"{DB_PATH}/{DB_FILENAME}"
 
+class ContactsCore:
+    HOME_DIR = str(Path.home())
+    DB_PATH = f"{HOME_DIR}/.contacts"
+    DB_FILENAME = "db.json"
+    DB_FILE_PATH = f"{DB_PATH}/{DB_FILENAME}"
 
-def init_db():
-    if path.exists(DB_FILE_PATH):
-        # db file already exists
-        return
+    def init_db(self):
+        if path.exists(self.DB_FILE_PATH):
+            # db file already exists
+            return
 
-    # create directory
-    Path(DB_PATH).mkdir(parents=True, exist_ok=True)
+        # create directory
+        Path(self.DB_PATH).mkdir(parents=True, exist_ok=True)
 
-    # initialize empty db file
-    with open(DB_FILE_PATH, "w") as db_file:
-        json.dump([], db_file, indent=4)
+        # initialize empty db file
+        with open(self.DB_FILE_PATH, "w") as db_file:
+            json.dump([], db_file, indent=4)
 
-    return True
+        return True
 
+    def reset_db(self):
+        with open(self.DB_FILE_PATH, "w") as test_file:
+            json.dump([], test_file, indent=4)
 
-def reset_db():
-    with open(DB_FILE_PATH, "w") as test_file:
-        json.dump([], test_file, indent=4)
+    def drop_db(self):
+        rmtree(self.DB_FILE_PATH)
 
+    def get_data(self):
+        with open(self.DB_FILE_PATH) as db_file:
+            db = json.load(db_file)
+            return db
 
-def drop_db():
-    rmtree(DB_FILE_PATH)
+    def save_data(self, data):
+        with open(self.DB_FILE_PATH, "w") as db_file:
+            json.dump(data, db_file, indent=4)
 
+    def get_next_id(self, data):
+        if not len(data):
+            return 1
 
-def get_data():
-    with open(DB_FILE_PATH) as db_file:
-        db = json.load(db_file)
-        return db
+        ids = [item["id"] for item in data]
+        ids.sort()
+        return ids[-1] + 1
 
+    def add_contact(self, first_name, last_name, sex, address):
+        data = self.get_data()
 
-def save_data(data):
-    with open(DB_FILE_PATH, "w") as db_file:
-        json.dump(data, db_file, indent=4)
+        item = {
+            "id": self.get_next_id(data),
+            "first_name": first_name.capitalize(),
+            "last_name": last_name.capitalize(),
+            "sex": sex.capitalize(),
+            "address": address.upper(),
+        }
 
+        data.append(item)
+        self.save_data(data)
 
-def get_next_id(data):
-    if not len(data):
-        return 1
+        return item
 
-    ids = [item["id"] for item in data]
-    ids.sort()
-    return ids[-1] + 1
+    def get_contact(self, id=None):
+        data = self.get_data()
+        if id is None:
+            return data
 
+        for contact in self.get_data():
+            if contact["id"] == id:
+                return contact
+        else:
+            return False
 
-def add_contact(first_name, last_name, sex, address):
-    data = get_data()
+    def update_contact(self, id, **kwargs):
+        data = self.get_data()
 
-    item = {
-        "id": get_next_id(data),
-        "first_name": first_name.capitalize(),
-        "last_name": last_name.capitalize(),
-        "sex": sex.capitalize(),
-        "address": address.upper(),
-    }
+        for contact in data:
+            if contact["id"] == id:
+                item = {
+                    "first_name": kwargs.get(
+                        "first_name", contact["first_name"]
+                    ).capitalize(),
+                    "last_name": kwargs.get(
+                        "last_name", contact["last_name"]
+                    ).capitalize(),
+                    "sex": kwargs.get("sex", contact["sex"]).capitalize(),
+                    "address": kwargs.get("address", contact["address"]).upper(),
+                }
+                contact.update(item)
+                self.save_data(data)
+                return contact
+        else:
+            return False
 
-    data.append(item)
-    save_data(data)
+    def remove_contact(self, id):
+        contact = self.get_contact(id)
 
-    return item
+        if not contact:
+            return False
 
+        data = self.get_data()
+        index = data.index(contact)
+        del data[index]
 
-def get_contact(id=None):
-    data = get_data()
-    if id is None:
-        return data
+        self.save_data(data=data)
 
-    for contact in get_data():
-        if contact["id"] == id:
-            return contact
-    else:
-        return False
+        return contact
 
-
-def update_contact(id, **kwargs):
-    data = get_data()
-
-    for contact in data:
-        if contact["id"] == id:
-            item = {
-                "first_name": kwargs.get(
-                    "first_name", contact["first_name"]
-                ).capitalize(),
-                "last_name": kwargs.get("last_name", contact["last_name"]).capitalize(),
-                "sex": kwargs.get("sex", contact["sex"]).capitalize(),
-                "address": kwargs.get("address", contact["address"]).upper(),
-            }
-            contact.update(item)
-            save_data(data)
-            return contact
-    else:
-        return False
-
-
-def remove_contact(id):
-    contact = get_contact(id)
-
-    if not contact:
-        return False
-
-    data = get_data()
-    index = data.index(contact)
-    del data[index]
-
-    save_data(data=data)
-
-    return contact
-
-
-def find_contact(keyword):
-    for contact in get_data():
-        if keyword in contact.values():
-            return contact
-    else:
-        return False
+    def find_contact(self, keyword):
+        for contact in self.get_data():
+            if keyword in contact.values():
+                return contact
+        else:
+            return False

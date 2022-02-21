@@ -1,14 +1,22 @@
 import click
-from contacts.core import (
-    init_db,
-    reset_db,
-    add_contact,
-    get_contact,
-    update_contact,
-    remove_contact,
-    find_contact,
-)
+
+# from contacts.core import (
+#     init_db,
+#     reset_db,
+#     add_contact,
+#     get_contact,
+#     update_contact,
+#     remove_contact,
+#     find_contact,
+# )
+
+from contacts.core import ContactsCore
+
+contacts_core = ContactsCore()
+
 from contacts.utils import console, get_print_func
+
+print(__name__)
 
 
 @click.group()
@@ -18,7 +26,7 @@ def cli():
 
 @click.command()
 def init():
-    res = init_db()
+    res = contacts_core.init_db()
     if res is None:
         console.print("Database already initialized", style="orange1")
     else:
@@ -30,7 +38,7 @@ def init():
 def db(action):
     match action:
         case "reset":
-            reset_db()
+            contacts_core.reset_db()
         case _:
             print("Unknown option")
 
@@ -46,7 +54,7 @@ def db(action):
     type=click.Choice(["table", "raw"], case_sensitive=False),
 )
 def add(first_name, last_name, sex, address, output):
-    contact = add_contact(
+    contact = contacts_core.add_contact(
         first_name=first_name, last_name=last_name, sex=sex, address=address
     )
 
@@ -62,7 +70,7 @@ def add(first_name, last_name, sex, address, output):
     type=click.Choice(["table", "raw"], case_sensitive=False),
 )
 def get(id=None, output="table"):
-    contact = get_contact(id)
+    contact = contacts_core.get_contact(id)
 
     print = get_print_func(output)
     print(data=contact)
@@ -80,7 +88,7 @@ def get(id=None, output="table"):
 )
 def update(id, output, **kwargs):
     kwargs = {key: value for key, value in kwargs.items() if value is not None}
-    contact = update_contact(id, **kwargs)
+    contact = contacts_core.update_contact(id, **kwargs)
 
     print = get_print_func(output)
     print(contact)
@@ -93,7 +101,7 @@ def update(id, output, **kwargs):
     default="table",
 )
 def remove(id=None, output="table"):
-    contact = remove_contact(id)
+    contact = contacts_core.remove_contact(id)
 
     print = get_print_func(output)
     print(contact)
@@ -109,7 +117,7 @@ def find(keyword, output="table"):
     if keyword.isnumeric():
         keyword = int(keyword)
 
-    contact = find_contact(keyword=keyword)
+    contact = contacts_core.find_contact(keyword=keyword)
 
     if not contact:
         console.print("Not found", style="red")
