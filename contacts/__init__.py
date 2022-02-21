@@ -1,3 +1,3 @@
-from contacts.core import ContactsCore
+from contacts.core import JsonDB
 
-__all__ = ["ContactsCore"]
+__all__ = ["JsonDB"]

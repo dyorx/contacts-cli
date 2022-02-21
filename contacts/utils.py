@@ -9,7 +9,7 @@ def print(message, level="INFO"):
     pass
 
 
-def print_contact(data):
+def print_table(data):
     if not data:
         console.print("Not Found", style="red")
         return None
@@ -43,7 +43,15 @@ def print_contact(data):
     console.print(table)
 
 
+def print_raw(data):
+    if not data:
+        console.print("Not Found", style="red")
+        return None
+
+    console.print_json(data=data)
+
+
 def get_print_func(output="table"):
     if output == "raw":
-        return print_json
-    return print_contact
+        return print_raw
+    return print_table
