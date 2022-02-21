@@ -130,4 +130,21 @@ class JsonDB:
 
 
 class SqliteDB:
-    pass
+    """
+    Requirements:
+        - should create db file
+        - create tables
+        - insert new contacts
+        - updated contacts
+        - read contacts
+        - delete contacts
+        - find contacts by keyword
+        - reset db
+        - drop db
+    """
+
+    def init(self):
+        pass
+
+    def add(self, first_name, last_name, sex, address):
+        pass
